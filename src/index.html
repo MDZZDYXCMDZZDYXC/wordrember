@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>WordRember - 背单词</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@tauri-apps/api@2"></script>
+</head>
+<body>
+    <div id="app">
+        <header class="app-header">
+            <h1>📚 WordRember</h1>
+            <span class="header-count" id="headerCount">0 个单词</span>
+        </header>
+
+        <main class="word-grid" id="wordGrid">
+        </main>
+
+        <nav class="pagination" id="pagination">
+            <button class="btn btn-nav" id="btnPrev" title="上一页">◀</button>
+            <span class="page-info" id="pageInfo">1 / 1</span>
+            <button class="btn btn-nav" id="btnNext" title="下一页">▶</button>
+        </nav>
+
+        <div class="page-content" id="pageManage" style="display:none;">
+            <div class="manage-tabs">
+                <button class="manage-tab active" data-manage="add" id="manageTabAdd">➕ 添加单词</button>
+                <button class="manage-tab" data-manage="import" id="manageTabImport">📥 导入单词</button>
+            </div>
+            
+            <div class="manage-content" id="manageAdd">
+                <div class="manage-section">
+                    <div class="form-group">
+                        <label for="inputWord">单词</label>
+                        <input type="text" id="inputWord" placeholder="输入单词">
+                    </div>
+                    <div class="form-group">
+                        <label for="inputMeaning">意思</label>
+                        <textarea id="inputMeaning" placeholder="输入单词意思" rows="3"></textarea>
+                    </div>
+                    <button class="btn btn-primary" id="btnSubmitWord">添加单词</button>
+                </div>
+            </div>
+            
+            <div class="manage-content" id="manageImport" style="display:none;">
+                <div class="manage-section">
+                    <div class="form-group">
+                        <label for="selectFormat">选择格式</label>
+                        <select id="selectFormat">
+                            <option value="csv">CSV (.csv)</option>
+                            <option value="json">JSON (.json)</option>
+                            <option value="txt">TXT (.txt)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>从文件导入</label>
+                        <div class="file-import-area">
+                            <button class="btn btn-secondary" id="btnSelectFile">📁 选择文件</button>
+                            <span id="selectedFileName" class="file-name">未选择文件</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="inputImportContent">或粘贴内容</label>
+                        <textarea id="inputImportContent" placeholder="在此粘贴要导入的内容..." rows="4"></textarea>
+                    </div>
+                    <button class="btn btn-primary" id="btnDoImport">导入单词</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-content" id="pageSettings" style="display:none;">
+            <div class="settings-section">
+                <h3>显示设置</h3>
+                <div class="form-group">
+                    <label for="pageSize">每页显示数量</label>
+                    <select id="pageSize">
+                        <option value="12">12</option>
+                        <option value="16">16</option>
+                        <option value="20" selected>20</option>
+                        <option value="24">24</option>
+                        <option value="30">30</option>
+                        <option value="40">40</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="settingThreshold">记忆阈值 (次数)</label>
+                    <input type="number" id="settingThreshold" min="1" max="20" value="5">
+                    <small>成功回忆达到此次数后标记为已掌握</small>
+                </div>
+            </div>
+            
+            <div class="settings-section">
+                <h3>窗口设置</h3>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="settingAlwaysOnTop">
+                        窗口置顶
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="settingMousePenetrate">
+                        鼠标穿透 (点击穿透窗口)
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label for="settingFloatDelay">浮窗延迟显示 (秒)</label>
+                    <input type="number" id="settingFloatDelay" min="1" max="10" value="3">
+                </div>
+            </div>
+            
+            <div class="settings-section">
+                <h3>数据管理</h3>
+                <button class="btn btn-danger" id="btnResetProgress">重置学习进度</button>
+            </div>
+        </div>
+
+        <footer class="bottom-nav">
+            <button class="nav-tab active" data-page="all" id="navAll">
+                <span class="nav-icon">📋</span>
+                <span class="nav-label">全部</span>
+            </button>
+            <button class="nav-tab" data-page="pending" id="navPending">
+                <span class="nav-icon">📖</span>
+                <span class="nav-label">待掌握</span>
+            </button>
+            <button class="nav-tab" data-page="learned" id="navLearned">
+                <span class="nav-icon">✅</span>
+                <span class="nav-label">已掌握</span>
+            </button>
+            <button class="nav-tab" data-page="manage" id="navManage">
+                <span class="nav-icon">📝</span>
+                <span class="nav-label">单词管理</span>
+            </button>
+            <button class="nav-tab" data-page="settings" id="navSettings">
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-label">设置</span>
+            </button>
+        </footer>
+    </div>
+
+    <div class="modal" id="modalMeaning">
+        <div class="modal-content modal-small">
+            <h2 id="meaningTitle">单词意思</h2>
+            <p id="meaningContent" class="meaning-text">意思内容</p>
+            <div class="form-actions">
+                <button class="btn btn-primary" id="btnCloseMeaning">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
